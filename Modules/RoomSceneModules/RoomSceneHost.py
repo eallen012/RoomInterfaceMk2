@@ -29,7 +29,9 @@ class RoomSceneHost(ScrollableMenu):
         folder_action = self.menu.addAction("Create Folder")
         folder_action.triggered.connect(self.create_folder)
         new_scene_action = self.menu.addAction("Create New Scene")
-        new_scene_action.triggered.connect(lambda: SceneEditorFlyout(self, None, None).show())
+        new_scene_action.triggered.connect(
+            lambda: SceneEditorFlyout(self, None, None).show()
+        )
 
         self.back_widget = SceneWidget(self, -1, None, is_back_widget=True)
         self.scene_data = None
@@ -41,14 +43,16 @@ class RoomSceneHost(ScrollableMenu):
         self.folder_level_label = QLabel(self)
         self.folder_level_label.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.folder_level_label.setFixedSize(self.width(), 20)
-        self.folder_level_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignCenter)
-        self.folder_level_label.setStyleSheet("color: white; font-size: 15px; font-weight: bold; border: none; background-color: transparent")
+        self.folder_level_label.setAlignment(
+            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignCenter
+        )
+        self.folder_level_label.setStyleSheet(
+            "color: white; font-size: 15px; font-weight: bold; border: none; background-color: transparent"
+        )
         self.folder_level_label.move(0, 2)
         self.folder_level_label.setText("Loading Scene Data...")
         self.folder_path_names = []
         self.folder_path_ids = []
-
-        self.hide()
 
         self.retry_timer = QTimer(self)
         self.retry_timer.timeout.connect(self.make_request)
@@ -57,12 +61,14 @@ class RoomSceneHost(ScrollableMenu):
         self.refresh_timer = QTimer(self)
         self.refresh_timer.timeout.connect(self.make_request)
 
+        self.hide()
+
         self.make_request()
 
     def make_request(self):
         logging.info("Requesting routine data")
         request = QNetworkRequest(QUrl(f"{get_host()}/scene_get/scenes/null"))
-        request.setRawHeader(b"Cookie", bytes("auth=" + get_auth(), 'utf-8'))
+        request.setRawHeader(b"Cookie", bytes("auth=" + get_auth(), "utf-8"))
         self.network_manager.get(request)
 
     def handle_network_response(self, reply):
@@ -162,8 +168,15 @@ class RoomSceneHost(ScrollableMenu):
             folder_name = diag.textValue()
             if folder_name == "":
                 return
-            SceneEditorFlyout(self, None, {"name": folder_name, "data": "{\"folder\":\"\"}",
-                                           "parent": self.current_top_folder}).show()
+            SceneEditorFlyout(
+                self,
+                None,
+                {
+                    "name": folder_name,
+                    "data": '{"folder":""}',
+                    "parent": self.current_top_folder,
+                },
+            ).show()
         except Exception as e:
             logging.error(f"Error creating folder: {e}")
             logging.exception(e)
@@ -175,7 +188,11 @@ class RoomSceneHost(ScrollableMenu):
         """
         available_folders = []
         for widget in self.scene_widgets:
-            if widget.is_folder and widget.parent_scene == self.current_top_folder and not widget.is_back_widget:
+            if (
+                widget.is_folder
+                and widget.parent_scene == self.current_top_folder
+                and not widget.is_back_widget
+            ):
                 available_folders.append((widget.scene_id, widget.data["name"]))
         # Additionally look one level up to allow moving scenes out from a parent folder
         if self.current_top_folder is not None:
@@ -184,7 +201,11 @@ class RoomSceneHost(ScrollableMenu):
                 available_folders.append((None, "Routines"))
             else:
                 for widget in self.scene_widgets:
-                    if widget.is_folder and widget.scene_id == outer_folder and not widget.is_back_widget:
+                    if (
+                        widget.is_folder
+                        and widget.scene_id == outer_folder
+                        and not widget.is_back_widget
+                    ):
                         available_folders.append((widget.scene_id, widget.data["name"]))
         return available_folders
 
@@ -196,7 +217,11 @@ class RoomSceneHost(ScrollableMenu):
             logging.exception(e)
 
     def open_folder(self, folder_id):
-        folder_name = [widget.data["name"] for widget in self.scene_widgets if widget.scene_id == folder_id][0]
+        folder_name = [
+            widget.data["name"]
+            for widget in self.scene_widgets
+            if widget.scene_id == folder_id
+        ][0]
         if folder_id == -1:
             if len(self.folder_path_names) == 1:
                 return
@@ -214,8 +239,15 @@ class RoomSceneHost(ScrollableMenu):
     def find_orphans(self):
         for widget in self.scene_widgets:
             if widget.parent_scene is not None:
-                if not any([scene.scene_id == widget.parent_scene for scene in self.scene_widgets]):
-                    logging.warning(f"Scene {widget.scene_id} has a parent that does not exist")
+                if not any(
+                    [
+                        scene.scene_id == widget.parent_scene
+                        for scene in self.scene_widgets
+                    ]
+                ):
+                    logging.warning(
+                        f"Scene {widget.scene_id} has a parent that does not exist"
+                    )
                     widget.orphaned()
 
     def layout_widgets(self):
@@ -226,11 +258,23 @@ class RoomSceneHost(ScrollableMenu):
         self.update_path_text()
 
         self.find_orphans()
-        current_widgets = [widget for widget in self.scene_widgets
-                           if (widget.parent_scene == self.current_top_folder and not widget.is_back_widget) or
-                           (widget.is_back_widget and self.current_top_folder is not None)]
+        current_widgets = [
+            widget
+            for widget in self.scene_widgets
+            if (
+                widget.parent_scene == self.current_top_folder
+                and not widget.is_back_widget
+            )
+            or (widget.is_back_widget and self.current_top_folder is not None)
+        ]
         # Sort the scenes by number of triggers (lowest to highest, excluding the new scene widget)
-        current_widgets.sort(key=lambda x: (x.is_back_widget, x.is_folder, len(x.data['triggers']) if not x.is_folder else 0))
+        current_widgets.sort(
+            key=lambda x: (
+                x.is_back_widget,
+                x.is_folder,
+                len(x.data["triggers"]) if not x.is_folder else 0,
+            )
+        )
 
         # Lay the widgets out row by row with a 10 pixel margin
         y_offset = 22
@@ -247,7 +291,9 @@ class RoomSceneHost(ScrollableMenu):
             x_offset += widget.width() + 7
             widget_num += 1
             # Wrap around to the next row if the widget won't fit on the current row
-            if x_offset + widget.width() > self.width() or (widget_num == len(current_widgets) - 1 and has_back_widget):
+            if x_offset + widget.width() > self.width() or (
+                widget_num == len(current_widgets) - 1 and has_back_widget
+            ):
                 center_offset.append(round((self.width() - x_offset - 5) / 2))
                 row_num += 1
                 x_offset = 5
