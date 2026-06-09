@@ -4,6 +4,7 @@ import os
 import queue
 import random
 import time
+import math
 
 from PyQt6.QtCore import QUrl, QTimer, Qt
 from PyQt6.QtGui import QPixmap, QImage
@@ -23,6 +24,8 @@ class RadarHost(QLabel):
         self.parent = parent
         self.setFixedSize(parent.width(), parent.height() - self.y())
         self.maptile_surface = QLabel(self)
+
+        self.center_lat, self.center_lon = 34.1712538, -117.7562261
 
         # Look into the MapTiles folder and determine the range of available map tiles
         self.min_x, self.max_x, self.min_y, self.max_y = self.determine_map_size()
@@ -120,16 +123,21 @@ class RadarHost(QLabel):
 
         self.activity_timer_callback = None
 
-    @staticmethod
-    def determine_map_size():
+    def determine_map_size(self):
         # Look into the MapTiles folder and determine the range of available map tiles
-        min_x, max_x, min_y, max_y = 1000, 0, 1000, 0
-        for file in os.listdir("Assets/MapTiles"):
-            x, y = map(int, file.split(".")[0].split("-"))
-            min_x = min(min_x, x)
-            max_x = max(max_x, x)
-            min_y = min(min_y, y)
-            max_y = max(max_y, y)
+        # min_x, max_x, min_y, max_y = 1000, 0, 1000, 0
+        # for file in os.listdir("Assets/MapTiles"):
+        #     x, y = map(int, file.split(".")[0].split("-"))
+        #     min_x = min(min_x, x)
+        #     max_x = max(max_x, x)
+        #     min_y = min(min_y, y)
+        #     max_y = max(max_y, y)
+        center = self.latlon_to_xy(self.center_lat, self.center_lon, 6)
+        min_x = int(center[0]) - 3
+        max_x = int(center[0]) + 4
+        min_y = int(center[1]) - 2
+        max_y = int(center[1]) + 2
+
         return min_x, max_x, min_y, max_y
 
     def set_activity_timer_callback(self, callback):
@@ -339,3 +347,13 @@ class RadarHost(QLabel):
         self.maptile_surface.move(new_x, new_y)
 
         self.load_radartiles()
+
+    @staticmethod
+    def latlon_to_xy(lat, lon, zoom):
+        n = 2**zoom
+        x_tile = n * ((lon + 180) / 360)
+        lat_rad = math.radians(lat)
+        y_tile = math.asinh(math.tan(lat_rad))
+        y_tile = 0.5 - y_tile / (2 * math.pi)
+        y_tile = y_tile * n
+        return (x_tile, y_tile)
