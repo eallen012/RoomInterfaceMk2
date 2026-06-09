@@ -28,7 +28,9 @@ class RadarHost(QLabel):
         self.min_x, self.max_x, self.min_y, self.max_y = self.determine_map_size()
         self.range_x = self.max_x - self.min_x + 1
         self.range_y = self.max_y - self.min_y + 1
-        logging.info(f"Map Tile Range: {self.min_x}-{self.max_x}, {self.min_y}-{self.max_y} : {self.range_x}x{self.range_y}")
+        logging.info(
+            f"Map Tile Range: {self.min_x}-{self.max_x}, {self.min_y}-{self.max_y} : {self.range_x}x{self.range_y}"
+        )
         self.map_tiles = []
         self.maptile_surface.setFixedSize(256 * self.range_x, 256 * self.range_y)
 
@@ -45,7 +47,9 @@ class RadarHost(QLabel):
         self.timestamp_label = QLabel(self)
         self.timestamp_label.setFixedSize(212, 20)
         self.timestamp_label.move(0, 0)
-        self.timestamp_label.setStyleSheet("background-color: black; color: #ffcd00; font-size: 14px;")
+        self.timestamp_label.setStyleSheet(
+            "background-color: black; color: #ffcd00; font-size: 14px;"
+        )
         self.timestamp_label.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.timestamp_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.timestamp_label.setText("Loading...")
@@ -54,7 +58,9 @@ class RadarHost(QLabel):
         self.now_button.setFixedSize(53, 20)
         self.now_button.move(0, 20)
         self.now_button.setText("Now")
-        self.now_button.setStyleSheet("background-color: grey; color: white; font-size: 14px;")
+        self.now_button.setStyleSheet(
+            "background-color: grey; color: white; font-size: 14px;"
+        )
         self.now_button.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.now_button.clicked.connect(self.now_button_clicked)
 
@@ -62,7 +68,9 @@ class RadarHost(QLabel):
         self.play_pause_button.setFixedSize(53, 20)
         self.play_pause_button.move(53, 20)
         self.play_pause_button.setText("Play")
-        self.play_pause_button.setStyleSheet("background-color: grey; color: white; font-size: 14px;")
+        self.play_pause_button.setStyleSheet(
+            "background-color: grey; color: white; font-size: 14px;"
+        )
         self.play_pause_button.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.play_pause_button.clicked.connect(self.play_button_clicked)
 
@@ -70,7 +78,9 @@ class RadarHost(QLabel):
         self.back_button.setFixedSize(53, 20)
         self.back_button.move(106, 20)
         self.back_button.setText("Back")
-        self.back_button.setStyleSheet("background-color: grey; color: white; font-size: 14px;")
+        self.back_button.setStyleSheet(
+            "background-color: grey; color: white; font-size: 14px;"
+        )
         self.back_button.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.back_button.clicked.connect(self.last_frame)
 
@@ -78,7 +88,9 @@ class RadarHost(QLabel):
         self.next_frame_button.setFixedSize(53, 20)
         self.next_frame_button.move(159, 20)
         self.next_frame_button.setText("Next")
-        self.next_frame_button.setStyleSheet("background-color: grey; color: white; font-size: 14px;")
+        self.next_frame_button.setStyleSheet(
+            "background-color: grey; color: white; font-size: 14px;"
+        )
         self.next_frame_button.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.next_frame_button.clicked.connect(self.next_frame)
 
@@ -86,10 +98,14 @@ class RadarHost(QLabel):
         self.loading_label.setFont(self.parent.get_font("JetBrainsMono-Regular"))
         self.loading_label.setFixedSize(300, 45)
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.loading_label.setStyleSheet("color: #ffcd00; font-size: 15px; font-weight: bold; border: none;"
-                                         " background-color: black")
+        self.loading_label.setStyleSheet(
+            "color: #ffcd00; font-size: 15px; font-weight: bold; border: none;"
+            " background-color: black"
+        )
         self.loading_label.setText("Loading Radar Frames [??/??]")
-        self.loading_label.move(round((self.width() - self.loading_label.width()) / 2), 0)
+        self.loading_label.move(
+            round((self.width() - self.loading_label.width()) / 2), 0
+        )
         self.loading_label.hide()
 
         self.timestamp_list = []
@@ -109,7 +125,7 @@ class RadarHost(QLabel):
         # Look into the MapTiles folder and determine the range of available map tiles
         min_x, max_x, min_y, max_y = 1000, 0, 1000, 0
         for file in os.listdir("Assets/MapTiles"):
-            x, y = map(int, file.split('.')[0].split('-'))
+            x, y = map(int, file.split(".")[0].split("-"))
             min_x = min(min_x, x)
             max_x = max(max_x, x)
             min_y = min(min_y, y)
@@ -121,17 +137,25 @@ class RadarHost(QLabel):
 
     def check_loading(self):
         # Compare the number of frames still loading to the total number of frames to be loaded
-        if all([map_tile.outstanding_requests == 0 and map_tile.outstanding_parses == 0
-                for map_tile in self.map_tiles]):
+        if all(
+            [
+                map_tile.outstanding_requests == 0 and map_tile.outstanding_parses == 0
+                for map_tile in self.map_tiles
+            ]
+        ):
             # self.loading_check_timer.stop()
             self.loading_label.hide()
         else:
             self.loading_label.show()
         total_tiles = sum([map_tile.total_frames for map_tile in self.map_tiles])
-        downloaded_frames = total_tiles - sum([map_tile.outstanding_requests for map_tile in self.map_tiles])
+        downloaded_frames = total_tiles - sum(
+            [map_tile.outstanding_requests for map_tile in self.map_tiles]
+        )
         loaded_frames = sum([len(map_tile.radar_images) for map_tile in self.map_tiles])
-        self.loading_label.setText(f"Loading Radar Data [{downloaded_frames}/{total_tiles}]\n"
-                                   f"Parsing Radar Data [{loaded_frames}/{total_tiles}]")
+        self.loading_label.setText(
+            f"Loading Radar Data [{downloaded_frames}/{total_tiles}]\n"
+            f"Parsing Radar Data [{loaded_frames}/{total_tiles}]"
+        )
 
     def last_frame(self):
         self.current_frame -= 2
@@ -177,27 +201,37 @@ class RadarHost(QLabel):
         current_x, current_y = self.maptile_surface.x(), self.maptile_surface.y()
         if a0.angleDelta().y() > 0 and self.zoom_level < 2:
             self.zoom_level += 1
-            self.maptile_surface.setFixedSize(self.maptile_surface.width() * 2, self.maptile_surface.height() * 2)
+            self.maptile_surface.setFixedSize(
+                self.maptile_surface.width() * 2, self.maptile_surface.height() * 2
+            )
             for map_tile in self.map_tiles:
                 map_tile.change_size(2)
             # Re layout the map tiles
             for i, map_tile in enumerate(self.map_tiles):
-                map_tile.move((i % 4) * self.map_tiles[0].width(),
-                              (i // 4) * self.map_tiles[0].height())
-                map_tile.position((i % 4) * self.map_tiles[0].width(),
-                                  (i // 4) * self.map_tiles[0].height())
+                map_tile.move(
+                    (i % 4) * self.map_tiles[0].width(),
+                    (i // 4) * self.map_tiles[0].height(),
+                )
+                map_tile.position(
+                    (i % 4) * self.map_tiles[0].width(),
+                    (i // 4) * self.map_tiles[0].height(),
+                )
             self.load_radartiles()
             # Adjust the position of the map tiles to keep the same point in the center
             self.maptile_surface.move(current_x * 2, current_y * 2)
         elif a0.angleDelta().y() < 0 and self.zoom_level > 1:
             self.zoom_level -= 1
-            self.maptile_surface.setFixedSize(self.maptile_surface.width() // 2, self.maptile_surface.height() // 2)
+            self.maptile_surface.setFixedSize(
+                self.maptile_surface.width() // 2, self.maptile_surface.height() // 2
+            )
             for map_tile in self.map_tiles:
                 map_tile.change_size(0.5)
             # Re layout the map tiles
             for i, map_tile in enumerate(self.map_tiles):
-                map_tile.move((i % 4) * self.map_tiles[0].width(),
-                              (i // 4) * self.map_tiles[0].height())
+                map_tile.move(
+                    (i % 4) * self.map_tiles[0].width(),
+                    (i // 4) * self.map_tiles[0].height(),
+                )
             self.load_radartiles()
             self.maptile_surface.move(current_x // 2, current_y // 2)
 
@@ -217,8 +251,13 @@ class RadarHost(QLabel):
             if self.dragging:
                 if self.activity_timer_callback is not None:
                     self.activity_timer_callback()
-                dx, dy = event.pos().x() - self.drag_start[0], event.pos().y() - self.drag_start[1]
-                self.maptile_surface.move(self.maptile_surface.x() + dx, self.maptile_surface.y() + dy)
+                dx, dy = (
+                    event.pos().x() - self.drag_start[0],
+                    event.pos().y() - self.drag_start[1],
+                )
+                self.maptile_surface.move(
+                    self.maptile_surface.x() + dx, self.maptile_surface.y() + dy
+                )
                 self.drag_start = (event.pos().x(), event.pos().y())
         except Exception as e:
             logging.error(f"Failed to handle mouse move event: {e}")
@@ -234,8 +273,8 @@ class RadarHost(QLabel):
                 return
             self.loading_check_timer.start(100)
             data = reply.readAll()
-            data = json.loads(str(data, 'utf-8'))
-            self.timestamp_list = data['weather_radar_list'][-self.max_frames:]
+            data = json.loads(str(data, "utf-8"))
+            self.timestamp_list = data["weather_radar_list"][-self.max_frames :]
             # Find the last timestamp that is less than the current time
             self.current_frame = len(self.timestamp_list) - 2 - 3
             # for i, timestamp in enumerate(self.timestamp_list.__reversed__()):
@@ -259,10 +298,13 @@ class RadarHost(QLabel):
             for map_tile in self.map_tiles:
                 map_tile.set_radar_overlay(self.timestamp_list[self.current_frame])
 
-            time_str = datetime.datetime.fromtimestamp(self.timestamp_list[self.current_frame]).strftime(
-                "%Y-%m-%d %I:%M%p")
-            self.timestamp_label.setText(f"{time_str} {str(self.current_frame + 1).zfill(2)}"
-                                         f"/{len(self.timestamp_list)}")
+            time_str = datetime.datetime.fromtimestamp(
+                self.timestamp_list[self.current_frame]
+            ).strftime("%Y-%m-%d %I:%M%p")
+            self.timestamp_label.setText(
+                f"{time_str} {str(self.current_frame + 1).zfill(2)}"
+                f"/{len(self.timestamp_list)}"
+            )
 
         except Exception as e:
             logging.error(f"Failed to load next frame: {e}")
@@ -271,7 +313,9 @@ class RadarHost(QLabel):
     def load_radartiles(self):
         self.loading_label.setText("Acquiring Radar Frame List")
         self.loading_label.show()
-        self.network_manager.get(QNetworkRequest(QUrl(f"{get_host()}/weather/available_radars")))
+        self.network_manager.get(
+            QNetworkRequest(QUrl(f"{get_host()}/weather/available_radars"))
+        )
 
     def load_maptiles(self):
         # All map tiles are 256x256 pixels in size and are stored in 'Assets/MapTiles/{x}-{y}.png'
@@ -281,15 +325,17 @@ class RadarHost(QLabel):
             for x in range(self.min_x, self.max_x + 1):
                 self.map_tiles.append(RadarTile(get_host(), self.maptile_surface, x, y))
         for i, map_tile in enumerate(self.map_tiles):
-            map_tile.move((i % self.range_x) * 256,
-                          (i // self.range_x) * 256)
+            map_tile.move((i % self.range_x) * 256, (i // self.range_x) * 256)
             if map_tile.tile_x == 16 and map_tile.tile_y == 22:
                 center_tile_x, center_tile_y = map_tile.x(), map_tile.y()
             # Print where the tile was placed
             # logging.info(f"Placed tile {map_tile.tile_x}-{map_tile.tile_y} at {map_tile.x()},{map_tile.y()}")
         # Center the map tile surface so that tile 16-22 is in the center of the screen
         print(f"Center Tile: {center_tile_x}, {center_tile_y}")
-        new_x, new_y = -center_tile_x + round(self.width() / 2) - 50, -center_tile_y + round(self.height() / 2) - 128
+        new_x, new_y = (
+            -center_tile_x + round(self.width() / 2) - 50,
+            -center_tile_y + round(self.height() / 2) - 128,
+        )
         self.maptile_surface.move(new_x, new_y)
 
         self.load_radartiles()
