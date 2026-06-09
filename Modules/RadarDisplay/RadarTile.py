@@ -1,8 +1,10 @@
 import queue
 import random
 import time
+import os
+from pathlib import Path
 
-from PyQt6.QtCore import Qt, QTimer, QUrl
+from PyQt6.QtCore import Qt, QTimer, QUrl, QByteArray
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 from PyQt6.QtWidgets import QLabel
@@ -26,6 +28,9 @@ class RadarTile(QLabel):
         self.tile_y = y
         self.screen_x = 0
         self.screen_y = 0
+
+        #   Previous method of getting the saved tile
+
         # self.setPixmap(
         #     QPixmap(f"Assets/MapTiles/{self.tile_x}-{self.tile_y}.png").scaled(
         #         self.width(),
@@ -38,7 +43,17 @@ class RadarTile(QLabel):
         self.tile_manager = QNetworkAccessManager()
         self.tile_manager.finished.connect(self.handle_tile_response)
 
-        self.request_new_tile(self.tile_x, self.tile_y)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        tile_dir = os.path.join(script_dir, ".cachedtiles")
+        file_path = Path(os.path.join(tile_dir, f"6-{self.tile_x}-{self.tile_y}"))
+
+        if os.path.isfile(file_path):
+            with open(file_path, "rb") as file:
+                data = file.read()
+                image = QImage.fromData(QByteArray(data))
+                self.setPixmap(QPixmap.fromImage(image))
+        else:
+            self.request_new_tile(self.tile_x, self.tile_y)
 
         self.timestamps = []
 
@@ -198,7 +213,7 @@ class RadarTile(QLabel):
         return True
 
     def request_new_tile(self, x, y):
-        url = f"https://tile.openstreetmap.org/10/{x}/{y}.png"
+        url = f"https://tile.openstreetmap.org/6/{x}/{y}.png"
 
         request = QNetworkRequest(QUrl(url))
         request.setHeader(
@@ -222,7 +237,16 @@ class RadarTile(QLabel):
             zoom = int(original_query.split("/")[3])
             x = int(original_query.split("/")[4])
             y = int(original_query.split("/")[5][:-4])
-            print(zoom, x, y)
+
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            tile_dir = os.path.join(script_dir, ".cachedtiles")
+            file_path = Path(os.path.join(tile_dir, f"{zoom}-{x}-{y}"))
+
+            if not os.path.exists(tile_dir):
+                os.makedirs(tile_dir)
+
+            with open(file_path, "wb") as file:
+                file.write(data.data())
 
             image = QImage.fromData(data)
             self.setPixmap(QPixmap.fromImage(image))
